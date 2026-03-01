@@ -3,28 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>La 23 Manager 0.4.1 Lite</title>
+<title>La 23 Manager 0.4.2</title>
+
 <style>
 body {
   margin: 0;
-  padding: 0;
+  font-family: Arial, sans-serif;
   background: linear-gradient(to bottom, #111, #222);
   color: white;
-  font-family: Arial, sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
+}
+
+.screen {
+  display: none;
+  width: 90%;
+  max-width: 400px;
   text-align: center;
 }
 
-.container {
-  width: 90%;
-  max-width: 400px;
-}
-
-h1 {
-  margin-bottom: 40px;
+.active {
+  display: block;
 }
 
 button {
@@ -45,12 +46,39 @@ button:active {
 </head>
 <body>
 
-<div class="container">
+<!-- MENÚ -->
+<div id="menu" class="screen active">
   <h1>LA 23 MANAGER</h1>
-  <button onclick="alert('Modo Carrera próximamente')">PLAY</button>
-  <button onclick="alert('Settings próximamente')">SETTINGS</button>
-  <button onclick="alert('Idioma próximamente')">IDIOMA</button>
+  <button onclick="goCareer()">PLAY</button>
+  <button onclick="alert('Settings pronto')">SETTINGS</button>
+  <button onclick="alert('Idioma pronto')">IDIOMA</button>
 </div>
+
+<!-- MODO CARRERA -->
+<div id="career" class="screen">
+  <h2>Elegí tu Club</h2>
+  <button onclick="selectTeam('La 23')">La 23</button>
+  <button onclick="selectTeam('Los Tigres')">Los Tigres</button>
+  <button onclick="selectTeam('Sol de América')">Sol de América</button>
+  <button onclick="selectTeam('Sporting')">Sporting</button>
+  <button onclick="goMenu()">⬅ Volver</button>
+</div>
+
+<script>
+function goCareer() {
+  document.getElementById("menu").classList.remove("active");
+  document.getElementById("career").classList.add("active");
+}
+
+function goMenu() {
+  document.getElementById("career").classList.remove("active");
+  document.getElementById("menu").classList.add("active");
+}
+
+function selectTeam(team) {
+  alert("Elegiste " + team + ". Próximo paso: comenzar temporada.");
+}
+</script>
 
 </body>
 </html>
