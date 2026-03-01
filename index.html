@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Liga 0.4.7</title>
+<title>Liga Argentina 0.5</title>
 <style>
 body{margin:0;font-family:Arial;background:#0f0f0f;color:white;text-align:center;transition:0.3s}
 button{padding:10px 20px;margin:8px;font-size:16px;border:none;border-radius:8px;background:#1f1f1f;color:white;cursor:pointer}
@@ -20,13 +20,14 @@ th,td{padding:4px}
 .arrow{font-size:24px;cursor:pointer;margin:0 20px}
 .fade{animation:fade 0.5s}
 @keyframes fade{from{opacity:0}to{opacity:1}}
+#popup{position:fixed;top:20px;right:20px;background:#222;padding:10px;border-radius:10px;color:white;display:none;opacity:0;transition:0.5s}
 </style>
 </head>
 <body>
 
 <!-- MENU -->
 <div id="menu" class="screen active fade">
-<h1>⚽ LIGA ARGENTINA</h1>
+<h1>⚽ LIGA ARGENTINA 0.5</h1>
 <button onclick="irElegir()">PLAY</button><br>
 <button>SETTINGS</button><br>
 <button>IDIOMA</button>
@@ -79,6 +80,9 @@ Confianza Junta
 <button onclick="resetear()">Nueva Temporada</button>
 </div>
 
+<!-- POP-UP DE NOTICIAS -->
+<div id="popup"></div>
+
 <script>
 let equipos=["La 23","Los Tigres","Sporting","Sol de América","Deportivo América","La Riveira","Los Verdes","Los Azules","Matadores","El Plan","Ntv","Psa","El Zondas","San Miguel Jrs","Güemes"];
 let presupuestos=[20,60,45,30,25,22,18,17,19,15,14,13,12,11,10];
@@ -90,6 +94,15 @@ let confianza=70;
 let fechaActual=1;
 
 let tablaData=equipos.map(e=>({nombre:e,pj:0,pts:0,gf:0,gc:0}));
+
+let noticiasPool=[
+"La Riveira ganó 2-1 a Sporting ⚽🔥",
+"Clásico caliente: Sol de América vs Deportivo América 💀",
+"Nuevo fichaje bomba: 12M 💰⚡",
+"Racha ganadora de La 23 🔥",
+"Moral de Los Tigres en alza 💪",
+"Confianza de la junta estable ✅"
+];
 
 function mostrar(id){
 document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
@@ -138,6 +151,15 @@ else if(confianza<50)c.className="fill warning";
 else c.className="fill";
 }
 
+function mostrarNoticia(texto){
+let popup=document.getElementById("popup");
+popup.innerText=texto;
+popup.style.display="block";
+popup.style.opacity=1;
+setTimeout(()=>{popup.style.opacity=0;},3000);
+setTimeout(()=>{popup.style.display="none";},3500);
+}
+
 function simularFecha(){
 if(fechaActual>15)return;
 
@@ -149,11 +171,15 @@ if(e.nombre===clubActual){
 e.pj++;
 e.gf+=goles;
 e.gc+=golesR;
-if(goles>golesR){e.pts+=3;moral+=5;confianza+=5;}
-else if(goles<golesR){moral-=7;confianza-=8;}
-else{e.pts+=1;}
+if(goles>golesR){e.pts+=3;moral+=5;confianza+=5;mostrarNoticia("Victoria ⚽🔥");}
+else if(goles<golesR){moral-=7;confianza-=8;mostrarNoticia("Derrota 💀");}
+else{e.pts+=1;mostrarNoticia("Empate 🤝");}
 }
 });
+
+// Simular otras noticias aleatorias
+let noticiaRandom=noticiasPool[Math.floor(Math.random()*noticiasPool.length)];
+mostrarNoticia(noticiaRandom);
 
 moral=Math.max(0,Math.min(90,moral));
 confianza=Math.max(0,Math.min(100,confianza));
