@@ -2,158 +2,210 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Liga 0.4.6</title>
+<title>Liga 0.4.7</title>
 <style>
-body{margin:0;font-family:Arial;background:#111;color:white;text-align:center}
-button{padding:10px 20px;margin:5px;font-size:16px;border:none;border-radius:8px;background:#222;color:white}
-.container{padding:10px}
-.hidden{display:none}
-table{width:100%;font-size:12px}
+body{margin:0;font-family:Arial;background:#0f0f0f;color:white;text-align:center;transition:0.3s}
+button{padding:10px 20px;margin:8px;font-size:16px;border:none;border-radius:8px;background:#1f1f1f;color:white;cursor:pointer}
+button:hover{background:#333}
+.screen{display:none;padding:20px}
+.active{display:block}
+h1,h2,h3{margin:10px}
+.bar{height:15px;background:#333;border-radius:10px;overflow:hidden;margin:5px auto;width:80%}
+.fill{height:100%;background:lime}
+.danger{background:red}
+.warning{background:orange}
+table{width:100%;font-size:12px;margin-top:10px}
 th,td{padding:4px}
-.gold{color:gold;font-weight:bold;font-size:22px}
+.gold{color:gold;font-size:22px}
+.arrow{font-size:24px;cursor:pointer;margin:0 20px}
+.fade{animation:fade 0.5s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 <body>
 
-<div id="tabla" class="container">
-<h2>🏆 Liga Argentina - Fecha <span id="fechaActual">1</span></h2>
-<div id="tablaContenido"></div>
-<button onclick="verCalendario()">📅 Calendario</button>
+<!-- MENU -->
+<div id="menu" class="screen active fade">
+<h1>⚽ LIGA ARGENTINA</h1>
+<button onclick="irElegir()">PLAY</button><br>
+<button>SETTINGS</button><br>
+<button>IDIOMA</button>
 </div>
 
-<div id="calendario" class="container hidden">
-<h2>📅 Calendario</h2>
-<div id="partidos"></div>
-<button onclick="volverTabla()">⬅ Volver</button>
+<!-- ELEGIR CLUB -->
+<div id="elegir" class="screen fade">
+<h2>Elegir Club</h2>
+<div>
+<span class="arrow" onclick="cambiar(-1)">⬅</span>
+<span id="clubNombre"></span>
+<span class="arrow" onclick="cambiar(1)">➡</span>
+</div>
+<h3 id="clubPresupuesto"></h3>
+<button onclick="confirmarClub()">Confirmar</button>
 </div>
 
-<div id="simulacion" class="container hidden">
-<h2 id="matchTitle"></h2>
-<h1 id="resultado">0 - 0</h1>
-<button onclick="volverTabla()">Volver</button>
+<!-- OBJETIVOS -->
+<div id="objetivos" class="screen fade">
+<h2>Objetivos de Temporada</h2>
+<div id="textoObjetivo"></div>
+<button onclick="iniciarLiga()">Comenzar Temporada</button>
 </div>
 
-<div id="campeon" class="container hidden">
+<!-- LIGA -->
+<div id="liga" class="screen fade">
+<h2 id="infoClub"></h2>
+<div>
+Moral
+<div class="bar"><div id="moralBar" class="fill"></div></div>
+Confianza Junta
+<div class="bar"><div id="confianzaBar" class="fill"></div></div>
+</div>
+<h3>Fecha <span id="fecha"></span></h3>
+<button onclick="simularFecha()">Simular Partido</button>
+<div id="resultado"></div>
+<table border="1" id="tabla"></table>
+</div>
+
+<!-- DESPIDO -->
+<div id="despedido" class="screen fade">
+<h1>💼 Has sido despedido</h1>
+<button onclick="resetear()">Volver al Menú</button>
+</div>
+
+<!-- CAMPEON -->
+<div id="campeon" class="screen fade">
 <h1 class="gold">🏆 CAMPEÓN 🏆</h1>
 <h2 id="nombreCampeon"></h2>
-<button onclick="reiniciarLiga()">🔄 Reiniciar Liga</button>
+<button onclick="resetear()">Nueva Temporada</button>
 </div>
 
 <script>
-let equipos=[
-"La 23","Los Tigres","Sporting","Sol de América","Deportivo América",
-"La Riveira","Los Verdes","Los Azules","Matadores","El Plan",
-"Ntv","Psa","El Zondas","San Miguel Jrs","Güemes"
-];
+let equipos=["La 23","Los Tigres","Sporting","Sol de América","Deportivo América","La Riveira","Los Verdes","Los Azules","Matadores","El Plan","Ntv","Psa","El Zondas","San Miguel Jrs","Güemes"];
+let presupuestos=[20,60,45,30,25,22,18,17,19,15,14,13,12,11,10];
 
-let data=equipos.map(nombre=>({
-nombre,
-pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:0,moral:50
-}));
+let indice=0;
+let clubActual=null;
+let moral=50;
+let confianza=70;
+let fechaActual=1;
 
-let fecha=1;
+let tablaData=equipos.map(e=>({nombre:e,pj:0,pts:0,gf:0,gc:0}));
 
-function ordenarTabla(){
-data.sort((a,b)=>b.pts-a.pts|| (b.gf-b.gc)-(a.gf-a.gc));
+function mostrar(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
 }
 
-function renderTabla(){
-ordenarTabla();
-let html="<table border='1'><tr><th>Equipo</th><th>PJ</th><th>PTS</th><th>DG</th><th>Moral</th></tr>";
-data.forEach(eq=>{
-let dg=eq.gf-eq.gc;
-let estado="🙂";
-if(eq.moral>=90)estado="🔥";
-else if(eq.moral<30)estado="💀";
-html+=`<tr>
-<td>${eq.nombre}</td>
-<td>${eq.pj}</td>
-<td>${eq.pts}</td>
-<td>${dg}</td>
-<td>${eq.moral}% ${estado}</td>
-</tr>`;
+function irElegir(){mostrar("elegir");actualizarClub();}
+
+function cambiar(d){
+indice=(indice+d+equipos.length)%equipos.length;
+actualizarClub();
+}
+
+function actualizarClub(){
+document.getElementById("clubNombre").innerText=equipos[indice];
+document.getElementById("clubPresupuesto").innerText="Presupuesto: "+presupuestos[indice]+"M";
+}
+
+function confirmarClub(){
+clubActual=equipos[indice];
+localStorage.setItem("clubGuardado",clubActual);
+mostrar("objetivos");
+document.getElementById("textoObjetivo").innerHTML=
+"Objetivo: Terminar Top 8<br>Mantener moral arriba de 40%";
+}
+
+function iniciarLiga(){
+mostrar("liga");
+document.getElementById("infoClub").innerText="Club: "+clubActual;
+actualizarBarras();
+actualizarTabla();
+document.getElementById("fecha").innerText=fechaActual;
+}
+
+function actualizarBarras(){
+let m=document.getElementById("moralBar");
+m.style.width=moral+"%";
+if(moral<30)m.className="fill danger";
+else if(moral<50)m.className="fill warning";
+else m.className="fill";
+
+let c=document.getElementById("confianzaBar");
+c.style.width=confianza+"%";
+if(confianza<30)c.className="fill danger";
+else if(confianza<50)c.className="fill warning";
+else c.className="fill";
+}
+
+function simularFecha(){
+if(fechaActual>15)return;
+
+let goles=Math.floor(Math.random()*3);
+let golesR=Math.floor(Math.random()*3);
+
+tablaData.forEach(e=>{
+if(e.nombre===clubActual){
+e.pj++;
+e.gf+=goles;
+e.gc+=golesR;
+if(goles>golesR){e.pts+=3;moral+=5;confianza+=5;}
+else if(goles<golesR){moral-=7;confianza-=8;}
+else{e.pts+=1;}
+}
 });
-html+="</table>";
-document.getElementById("tablaContenido").innerHTML=html;
-document.getElementById("fechaActual").innerText=fecha;
+
+moral=Math.max(0,Math.min(90,moral));
+confianza=Math.max(0,Math.min(100,confianza));
+
+document.getElementById("resultado").innerText="Resultado: "+goles+" - "+golesR;
+
+fechaActual++;
+document.getElementById("fecha").innerText=fechaActual;
+
+actualizarBarras();
+actualizarTabla();
+
+if(confianza<=0){mostrar("despedido");}
+if(fechaActual>15){evaluarFinal();}
 }
 
-function verCalendario(){
-document.getElementById("tabla").classList.add("hidden");
-document.getElementById("calendario").classList.remove("hidden");
-generarPartidos();
+function actualizarTabla(){
+tablaData.sort((a,b)=>b.pts-a.pts);
+let html="<tr><th>Equipo</th><th>PJ</th><th>PTS</th></tr>";
+tablaData.forEach(e=>{
+html+=`<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.pts}</td></tr>`;
+});
+document.getElementById("tabla").innerHTML=html;
 }
 
-function volverTabla(){
-document.getElementById("calendario").classList.add("hidden");
-document.getElementById("simulacion").classList.add("hidden");
-document.getElementById("tabla").classList.remove("hidden");
-renderTabla();
-}
-
-function generarPartidos(){
-let html="";
-for(let i=0;i<data.length;i+=2){
-if(data[i+1]){
-html+=`${data[i].nombre} vs ${data[i+1].nombre}
-<button onclick="simular(${i},${i+1})">Simular</button><br><br>`;
-}
-}
-document.getElementById("partidos").innerHTML=html;
-}
-
-function simular(i,j){
-let a=data[i];
-let b=data[j];
-
-let golesA=Math.floor(Math.random()*3);
-let golesB=Math.floor(Math.random()*3);
-
-a.pj++; b.pj++;
-a.gf+=golesA; b.gf+=golesB;
-a.gc+=golesB; b.gc+=golesA;
-
-if(golesA>golesB){
-a.g++; a.pts+=3;
-b.p++;
-a.moral=Math.min(90,a.moral+5);
-b.moral=Math.max(0,b.moral-5);
-}else if(golesB>golesA){
-b.g++; b.pts+=3;
-a.p++;
-b.moral=Math.min(90,b.moral+5);
-a.moral=Math.max(0,a.moral-5);
+function evaluarFinal(){
+tablaData.sort((a,b)=>b.pts-a.pts);
+if(tablaData[0].nombre===clubActual){
+mostrar("campeon");
+document.getElementById("nombreCampeon").innerText=clubActual;
 }else{
-a.e++; b.e++;
-a.pts+=1; b.pts+=1;
-}
-
-document.getElementById("calendario").classList.add("hidden");
-document.getElementById("simulacion").classList.remove("hidden");
-document.getElementById("matchTitle").innerText=a.nombre+" vs "+b.nombre;
-document.getElementById("resultado").innerText=golesA+" - "+golesB;
-
-if(fecha>=15){
-mostrarCampeon();
-}else{
-fecha++;
+if(confianza<40){mostrar("despedido");}
 }
 }
 
-function mostrarCampeon(){
-ordenarTabla();
-document.getElementById("tabla").classList.add("hidden");
-document.getElementById("simulacion").classList.add("hidden");
-document.getElementById("campeon").classList.remove("hidden");
-document.getElementById("nombreCampeon").innerText=data[0].nombre;
-}
-
-function reiniciarLiga(){
+function resetear(){
+localStorage.removeItem("clubGuardado");
 location.reload();
 }
 
-renderTabla();
+window.onload=function(){
+let guardado=localStorage.getItem("clubGuardado");
+if(guardado){
+clubActual=guardado;
+mostrar("liga");
+document.getElementById("infoClub").innerText="Club: "+clubActual;
+actualizarBarras();
+actualizarTabla();
+document.getElementById("fecha").innerText=fechaActual;
+}
+};
 </script>
 
 </body>
-</html>
+  </html>
