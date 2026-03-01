@@ -3,144 +3,127 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>La 23 Manager 0.4.3</title>
+<title>La 23 Manager 0.4.6</title>
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(to bottom, #111, #222);
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+body{
+  margin:0;
+  font-family:Arial;
+  background:#111;
+  color:white;
+  text-align:center;
 }
-
-.screen {
-  display: none;
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
+button{
+  padding:10px;
+  margin:10px;
+  font-size:16px;
+  border:none;
+  border-radius:6px;
+  background:#00aa55;
+  color:white;
 }
-
-.active {
-  display: block;
+table{
+  width:95%;
+  margin:auto;
+  border-collapse:collapse;
+  font-size:12px;
 }
-
-button {
-  width: 100%;
-  padding: 15px;
-  margin: 10px 0;
-  font-size: 18px;
-  border: none;
-  border-radius: 8px;
-  background-color: #00aa55;
-  color: white;
-}
-
-button:active {
-  background-color: #008844;
-}
-
-select {
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  font-size: 16px;
-  border-radius: 6px;
+th,td{
+  border:1px solid #444;
+  padding:4px;
 }
 </style>
 </head>
 <body>
 
-<!-- MENÚ -->
-<div id="menu" class="screen active">
-  <h1>LA 23 MANAGER</h1>
-  <button onclick="goCareer()">PLAY</button>
-  <button onclick="goSettings()">SETTINGS</button>
-  <button onclick="goLanguage()">IDIOMA</button>
-</div>
+<h2>LIGA 1RA DIVISIÓN</h2>
+<p id="fecha">Fecha 1</p>
+<button onclick="simularFecha()">Simular Fecha</button>
 
-<!-- MODO CARRERA -->
-<div id="career" class="screen">
-  <h2>Elegí tu Club</h2>
-  <button onclick="selectTeam('La 23')">La 23</button>
-  <button onclick="selectTeam('Los Tigres')">Los Tigres</button>
-  <button onclick="selectTeam('Sol de América')">Sol de América</button>
-  <button onclick="selectTeam('Sporting')">Sporting</button>
-  <button onclick="goMenu()">⬅ Volver</button>
-</div>
-
-<!-- SETTINGS -->
-<div id="settings" class="screen">
-  <h2>Settings</h2>
-  <label>Calidad:</label>
-  <select id="quality">
-    <option value="baja">Baja</option>
-    <option value="media" selected>Media</option>
-    <option value="alta">Alta</option>
-  </select>
-  <label>Gráfica (%): <span id="graphicVal">50</span>%</label>
-  <input type="range" id="graphics" min="30" max="60" value="50" oninput="updateGraphic(this.value)">
-  <button onclick="goMenu()">⬅ Volver</button>
-</div>
-
-<!-- IDIOMA -->
-<div id="language" class="screen">
-  <h2>Idioma</h2>
-  <button onclick="setLang('es')">Español</button>
-  <button onclick="setLang('en')">English</button>
-  <button onclick="goMenu()">⬅ Volver</button>
-</div>
-
-<!-- INFO CLUB -->
-<div id="clubInfo" class="screen">
-  <h2 id="clubName">Club</h2>
-  <p>Presupuesto: <span id="budget">0M</span></p>
-  <p>Objetivo del año: <span id="objective">—</span></p>
-  <button onclick="goMenu()">⬅ Volver al menú</button>
-</div>
+<table>
+<thead>
+<tr>
+<th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th>
+<th>GF</th><th>GC</th><th>PTS</th>
+</tr>
+</thead>
+<tbody id="tabla"></tbody>
+</table>
 
 <script>
-// Pantallas
-function showScreen(id) {
-  const screens = document.querySelectorAll('.screen');
-  screens.forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+
+let fechaActual = 1;
+
+let equipos = [
+"La 23","Los Tigres","Los Verdes","Sol de América","Deportivo América",
+"La Riveira","Sporting","Los Azules","Matadores","El Plan",
+"NTV","PSA","El Zondas","San Miguel Jrs","Güemes","La Pinta"
+].map(nombre => ({
+  nombre,
+  pj:0, pg:0, pe:0, pp:0,
+  gf:0, gc:0, pts:0,
+  moral: Math.floor(Math.random()*81)+20
+}));
+
+function mostrarTabla(){
+  equipos.sort((a,b)=> b.pts - a.pts || (b.gf-b.gc)-(a.gf-a.gc));
+  let html="";
+  equipos.forEach(e=>{
+    html+=`<tr>
+    <td>${e.nombre}</td>
+    <td>${e.pj}</td>
+    <td>${e.pg}</td>
+    <td>${e.pe}</td>
+    <td>${e.pp}</td>
+    <td>${e.gf}</td>
+    <td>${e.gc}</td>
+    <td>${e.pts}</td>
+    </tr>`;
+  });
+  document.getElementById("tabla").innerHTML=html;
 }
 
-function goMenu(){ showScreen('menu'); }
-function goCareer(){ showScreen('career'); }
-function goSettings(){ showScreen('settings'); }
-function goLanguage(){ showScreen('language'); }
+function simularFecha(){
 
-// Idioma
-let lang = 'es';
-function setLang(l) {
-  lang = l;
-  alert(l==='es'?'Idioma cambiado a Español':'Language set to English');
-}
-
-// Settings
-function updateGraphic(val){
-  document.getElementById('graphicVal').textContent = val;
-}
-
-// Selección club
-function selectTeam(team){
-  let budget, objective;
-  switch(team){
-    case 'La 23': budget='12M'; objective='No descender'; break;
-    case 'Los Tigres': budget='30M'; objective='Ganar Liga'; break;
-    case 'Sol de América': budget='15M'; objective='No descender'; break;
-    case 'Sporting': budget='25M'; objective='Top 5'; break;
+  if(fechaActual>15){
+    alert("Temporada finalizada. Campeón: "+equipos[0].nombre);
+    return;
   }
-  document.getElementById('clubName').textContent = team;
-  document.getElementById('budget').textContent = budget;
-  document.getElementById('objective').textContent = objective;
-  showScreen('clubInfo');
+
+  for(let i=0;i<equipos.length;i+=2){
+
+    let e1=equipos[i];
+    let e2=equipos[i+1];
+
+    let goles1=Math.floor(Math.random()*3 + e1.moral/50);
+    let goles2=Math.floor(Math.random()*3 + e2.moral/50);
+
+    e1.pj++; e2.pj++;
+    e1.gf+=goles1; e1.gc+=goles2;
+    e2.gf+=goles2; e2.gc+=goles1;
+
+    if(goles1>goles2){
+      e1.pg++; e1.pts+=3; e2.pp++;
+      e1.moral+=2; e2.moral-=2;
+    }
+    else if(goles2>goles1){
+      e2.pg++; e2.pts+=3; e1.pp++;
+      e2.moral+=2; e1.moral-=2;
+    }
+    else{
+      e1.pe++; e2.pe++;
+      e1.pts+=1; e2.pts+=1;
+    }
+
+  }
+
+  fechaActual++;
+  document.getElementById("fecha").textContent="Fecha "+fechaActual;
+  mostrarTabla();
 }
+
+mostrarTabla();
+
 </script>
 
 </body>
