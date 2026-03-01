@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>La 23 Manager 0.4.2</title>
+<title>La 23 Manager 0.4.3</title>
 
 <style>
 body {
@@ -42,6 +42,14 @@ button {
 button:active {
   background-color: #008844;
 }
+
+select {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  font-size: 16px;
+  border-radius: 6px;
+}
 </style>
 </head>
 <body>
@@ -50,8 +58,8 @@ button:active {
 <div id="menu" class="screen active">
   <h1>LA 23 MANAGER</h1>
   <button onclick="goCareer()">PLAY</button>
-  <button onclick="alert('Settings pronto')">SETTINGS</button>
-  <button onclick="alert('Idioma pronto')">IDIOMA</button>
+  <button onclick="goSettings()">SETTINGS</button>
+  <button onclick="goLanguage()">IDIOMA</button>
 </div>
 
 <!-- MODO CARRERA -->
@@ -64,19 +72,74 @@ button:active {
   <button onclick="goMenu()">⬅ Volver</button>
 </div>
 
+<!-- SETTINGS -->
+<div id="settings" class="screen">
+  <h2>Settings</h2>
+  <label>Calidad:</label>
+  <select id="quality">
+    <option value="baja">Baja</option>
+    <option value="media" selected>Media</option>
+    <option value="alta">Alta</option>
+  </select>
+  <label>Gráfica (%): <span id="graphicVal">50</span>%</label>
+  <input type="range" id="graphics" min="30" max="60" value="50" oninput="updateGraphic(this.value)">
+  <button onclick="goMenu()">⬅ Volver</button>
+</div>
+
+<!-- IDIOMA -->
+<div id="language" class="screen">
+  <h2>Idioma</h2>
+  <button onclick="setLang('es')">Español</button>
+  <button onclick="setLang('en')">English</button>
+  <button onclick="goMenu()">⬅ Volver</button>
+</div>
+
+<!-- INFO CLUB -->
+<div id="clubInfo" class="screen">
+  <h2 id="clubName">Club</h2>
+  <p>Presupuesto: <span id="budget">0M</span></p>
+  <p>Objetivo del año: <span id="objective">—</span></p>
+  <button onclick="goMenu()">⬅ Volver al menú</button>
+</div>
+
 <script>
-function goCareer() {
-  document.getElementById("menu").classList.remove("active");
-  document.getElementById("career").classList.add("active");
+// Pantallas
+function showScreen(id) {
+  const screens = document.querySelectorAll('.screen');
+  screens.forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 }
 
-function goMenu() {
-  document.getElementById("career").classList.remove("active");
-  document.getElementById("menu").classList.add("active");
+function goMenu(){ showScreen('menu'); }
+function goCareer(){ showScreen('career'); }
+function goSettings(){ showScreen('settings'); }
+function goLanguage(){ showScreen('language'); }
+
+// Idioma
+let lang = 'es';
+function setLang(l) {
+  lang = l;
+  alert(l==='es'?'Idioma cambiado a Español':'Language set to English');
 }
 
-function selectTeam(team) {
-  alert("Elegiste " + team + ". Próximo paso: comenzar temporada.");
+// Settings
+function updateGraphic(val){
+  document.getElementById('graphicVal').textContent = val;
+}
+
+// Selección club
+function selectTeam(team){
+  let budget, objective;
+  switch(team){
+    case 'La 23': budget='12M'; objective='No descender'; break;
+    case 'Los Tigres': budget='30M'; objective='Ganar Liga'; break;
+    case 'Sol de América': budget='15M'; objective='No descender'; break;
+    case 'Sporting': budget='25M'; objective='Top 5'; break;
+  }
+  document.getElementById('clubName').textContent = team;
+  document.getElementById('budget').textContent = budget;
+  document.getElementById('objective').textContent = objective;
+  showScreen('clubInfo');
 }
 </script>
 
