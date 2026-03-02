@@ -1,237 +1,143 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Liga Argentina 0.5</title>
-<style>
-body{margin:0;font-family:Arial;background:#0f0f0f;color:white;text-align:center;transition:0.3s}
-button{padding:10px 20px;margin:8px;font-size:16px;border:none;border-radius:8px;background:#1f1f1f;color:white;cursor:pointer}
-button:hover{background:#333}
-.screen{display:none;padding:20px}
-.active{display:block}
-h1,h2,h3{margin:10px}
-.bar{height:15px;background:#333;border-radius:10px;overflow:hidden;margin:5px auto;width:80%}
-.fill{height:100%;background:lime}
-.danger{background:red}
-.warning{background:orange}
-table{width:100%;font-size:12px;margin-top:10px}
-th,td{padding:4px}
-.gold{color:gold;font-size:22px}
-.arrow{font-size:24px;cursor:pointer;margin:0 20px}
-.fade{animation:fade 0.5s}
-@keyframes fade{from{opacity:0}to{opacity:1}}
-#popup{position:fixed;top:20px;right:20px;background:#222;padding:10px;border-radius:10px;color:white;display:none;opacity:0;transition:0.5s}
-</style>
-</head>
-<body>
+import random
 
-<!-- MENU -->
-<div id="menu" class="screen active fade">
-<h1>⚽ LIGA ARGENTINA 0.5</h1>
-<button onclick="irElegir()">PLAY</button><br>
-<button>SETTINGS</button><br>
-<button>IDIOMA</button>
-</div>
+# --- Equipos ---
+primera = ["La 23","Los Verdes","Sol de América","La Riveira","El Plan",
+           "Sporting","NTV","Matadores","Garrablanca","La Riveira2",
+           "Los Tigres","Deportivo América","River B","River C","Equipo15","Equipo16"]
 
-<!-- ELEGIR CLUB -->
-<div id="elegir" class="screen fade">
-<h2>Elegir Club</h2>
-<div>
-<span class="arrow" onclick="cambiar(-1)">⬅</span>
-<span id="clubNombre"></span>
-<span class="arrow" onclick="cambiar(1)">➡</span>
-</div>
-<h3 id="clubPresupuesto"></h3>
-<button onclick="confirmarClub()">Confirmar</button>
-</div>
+bnacional = ["Güemes","Capital","Persa FC","La Arboledad","Carrefourt",
+             "Unión Infantil","Unión Hurlingham","Celestial","La Base","El Gol",
+             "Sevilla","San Ciro","El Fortín","San José","Deportivo Motores","Deportivo Morón"]
 
-<!-- OBJETIVOS -->
-<div id="objetivos" class="screen fade">
-<h2>Objetivos de Temporada</h2>
-<div id="textoObjetivo"></div>
-<button onclick="iniciarLiga()">Comenzar Temporada</button>
-</div>
+# Moral inicial
+moral_primera = {e:50 for e in primera}
+moral_bn = {e:50 for e in bnacional}
 
-<!-- LIGA -->
-<div id="liga" class="screen fade">
-<h2 id="infoClub"></h2>
-<div>
-Moral
-<div class="bar"><div id="moralBar" class="fill"></div></div>
-Confianza Junta
-<div class="bar"><div id="confianzaBar" class="fill"></div></div>
-</div>
-<h3>Fecha <span id="fecha"></span></h3>
-<button onclick="simularFecha()">Simular Partido</button>
-<div id="resultado"></div>
-<table border="1" id="tabla"></table>
-</div>
+# Tabla inicial
+tabla_primera = {e: {"puntos":0,"gf":0,"gc":0,"dif":0} for e in primera}
+tabla_bn = {e: {"puntos":0,"gf":0,"gc":0,"dif":0} for e in bnacional}
 
-<!-- DESPIDO -->
-<div id="despedido" class="screen fade">
-<h1>💼 Has sido despedido</h1>
-<button onclick="resetear()">Volver al Menú</button>
-</div>
+# --- Generar partidos ---
+def generar_partidos(equipos, tu_equipo):
+    equipos_disp = equipos.copy()
+    random.shuffle(equipos_disp)
+    partidos = []
+    while equipos_disp:
+        e1 = equipos_disp.pop(0)
+        if e1 == tu_equipo:
+            e2 = random.choice([x for x in equipos_disp if x != tu_equipo])
+            equipos_disp.remove(e2)
+            partidos.append((e1,e2,"TU"))
+        else:
+            if not equipos_disp: break
+            e2 = equipos_disp.pop(0)
+            partidos.append((e1,e2,"NORMAL"))
+    return partidos
 
-<!-- CAMPEON -->
-<div id="campeon" class="screen fade">
-<h1 class="gold">🏆 CAMPEÓN 🏆</h1>
-<h2 id="nombreCampeon"></h2>
-<button onclick="resetear()">Nueva Temporada</button>
-</div>
+# --- Simular partido ---
+def simular(e1,e2,tipo,moral,tabla):
+    mod1 = random.randint(0,5) + moral[e1]//20
+    mod2 = random.randint(0,5) + moral[e2]//20
+    res = (mod1,mod2)
+    
+    # Tabla
+    tabla[e1]["gf"] += mod1
+    tabla[e1]["gc"] += mod2
+    tabla[e2]["gf"] += mod2
+    tabla[e2]["gc"] += mod1
+    tabla[e1]["dif"] = tabla[e1]["gf"]-tabla[e1]["gc"]
+    tabla[e2]["dif"] = tabla[e2]["gf"]-tabla[e2]["gc"]
+    
+    # Puntos y moral
+    if mod1>mod2:
+        tabla[e1]["puntos"]+=3
+        moral[e1]+=1
+        moral[e2]-=1
+    elif mod2>mod1:
+        tabla[e2]["puntos"]+=3
+        moral[e2]+=1
+        moral[e1]-=1
+    else:
+        tabla[e1]["puntos"]+=1
+        tabla[e2]["puntos"]+=1
+    
+    # Noticias
+    noticias=[]
+    if tipo=="TU":
+        noticias.append(f"⚽ Tu partido: {e1} {mod1}-{mod2} {e2}")
+    if abs(mod1-mod2)>=3:
+        noticias.append(f"🔥 Goleada: {e1} {mod1}-{mod2} {e2}")
+    return res, noticias
 
-<!-- POP-UP DE NOTICIAS -->
-<div id="popup"></div>
+# --- Simular fecha completa ---
+def simular_fecha(tu_equipo_primera, tu_equipo_bn=None):
+    print("\n=== Simulando Fecha Primera ===")
+    partidos = generar_partidos(primera, tu_equipo_primera)
+    noticias_fecha=[]
+    for e1,e2,tipo in partidos:
+        res, noticias = simular(e1,e2,tipo,moral_primera,tabla_primera)
+        noticias_fecha.extend(noticias)
+        print(f"{e1} {res[0]} - {res[1]} {e2}")
+    
+    print("\n=== Simulando Fecha B Nacional ===")
+    if tu_equipo_bn:
+        partidos_bn = generar_partidos(bnacional, tu_equipo_bn)
+        for e1,e2,tipo in partidos_bn:
+            res, noticias = simular(e1,e2,tipo,moral_bn,tabla_bn)
+            noticias_fecha.extend(noticias)
+            print(f"{e1} {res[0]} - {res[1]} {e2}")
+    
+    print("\n📰 Noticias importantes:")
+    for n in noticias_fecha:
+        print(n)
+    
+    # Mostrar tabla Primera
+    print("\n📊 Tabla Primera División:")
+    lider = max(tabla_primera.items(), key=lambda x:x[1]["puntos"])[0]
+    for eq,data in tabla_primera.items():
+        icono=" 👑" if eq==lider else ""
+        print(f"{eq}: {data['puntos']} pts GF:{data['gf']} GC:{data['gc']} DIF:{data['dif']}{icono}")
+    
+    # Mostrar tabla B Nacional
+    print("\n📊 Tabla B Nacional:")
+    lider_bn = max(tabla_bn.items(), key=lambda x:x[1]["puntos"])[0]
+    for eq,data in tabla_bn.items():
+        icono=" 👑" if eq==lider_bn else ""
+        print(f"{eq}: {data['puntos']} pts GF:{data['gf']} GC:{data['gc']} DIF:{data['dif']}{icono}")
 
-<script>
-let equipos=["La 23","Los Tigres","Sporting","Sol de América","Deportivo América","La Riveira","Los Verdes","Los Azules","Matadores","El Plan","Ntv","Psa","El Zondas","San Miguel Jrs","Güemes"];
-let presupuestos=[20,60,45,30,25,22,18,17,19,15,14,13,12,11,10];
+# --- Simular promoción automática ---
+def promocion():
+    # 14° Primera vs 3° B Nacional
+    equipos_primera_ord = sorted(tabla_primera.items(), key=lambda x:x[1]["puntos"])
+    equipos_bn_ord = sorted(tabla_bn.items(), key=lambda x:x[1]["puntos"], reverse=True)
+    p1 = equipos_primera_ord[2][0]  # 14° (índice 2 desde el final)
+    b3 = equipos_bn_ord[2][0]       # 3° B Nacional
+    
+    print(f"\n⚔️ Promoción: {p1} vs {b3} (ida y vuelta)")
+    
+    # Ida
+    ida = random.randint(0,5), random.randint(0,5)
+    # Vuelta
+    vuelta = random.randint(0,5), random.randint(0,5)
+    total_primera = ida[0]+vuelta[1]
+    total_bn = ida[1]+vuelta[0]
+    
+    print(f"Ida: {p1} {ida[0]}-{ida[1]} {b3}")
+    print(f"Vuelta: {p1} {vuelta[0]}-{vuelta[1]} {b3}")
+    
+    if total_primera > total_bn:
+        print(f"✅ {p1} se mantiene en Primera División")
+    elif total_bn > total_primera:
+        print(f"✅ {b3} asciende a Primera División")
+    else:
+        # Penales
+        penales_primera = random.randint(0,5)
+        penales_bn = random.randint(0,5)
+        ganador = p1 if penales_primera>penales_bn else b3
+        print(f"⚡ Empate global, penales: {penales_primera}-{penales_bn} → {ganador} gana la promoción")
 
-let indice=0;
-let clubActual=null;
-let moral=50;
-let confianza=70;
-let fechaActual=1;
-
-let tablaData=equipos.map(e=>({nombre:e,pj:0,pts:0,gf:0,gc:0}));
-
-let noticiasPool=[
-"La Riveira ganó 2-1 a Sporting ⚽🔥",
-"Clásico caliente: Sol de América vs Deportivo América 💀",
-"Nuevo fichaje bomba: 12M 💰⚡",
-"Racha ganadora de La 23 🔥",
-"Moral de Los Tigres en alza 💪",
-"Confianza de la junta estable ✅"
-];
-
-function mostrar(id){
-document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-document.getElementById(id).classList.add("active");
-}
-
-function irElegir(){mostrar("elegir");actualizarClub();}
-
-function cambiar(d){
-indice=(indice+d+equipos.length)%equipos.length;
-actualizarClub();
-}
-
-function actualizarClub(){
-document.getElementById("clubNombre").innerText=equipos[indice];
-document.getElementById("clubPresupuesto").innerText="Presupuesto: "+presupuestos[indice]+"M";
-}
-
-function confirmarClub(){
-clubActual=equipos[indice];
-localStorage.setItem("clubGuardado",clubActual);
-mostrar("objetivos");
-document.getElementById("textoObjetivo").innerHTML=
-"Objetivo: Terminar Top 8<br>Mantener moral arriba de 40%";
-}
-
-function iniciarLiga(){
-mostrar("liga");
-document.getElementById("infoClub").innerText="Club: "+clubActual;
-actualizarBarras();
-actualizarTabla();
-document.getElementById("fecha").innerText=fechaActual;
-}
-
-function actualizarBarras(){
-let m=document.getElementById("moralBar");
-m.style.width=moral+"%";
-if(moral<30)m.className="fill danger";
-else if(moral<50)m.className="fill warning";
-else m.className="fill";
-
-let c=document.getElementById("confianzaBar");
-c.style.width=confianza+"%";
-if(confianza<30)c.className="fill danger";
-else if(confianza<50)c.className="fill warning";
-else c.className="fill";
-}
-
-function mostrarNoticia(texto){
-let popup=document.getElementById("popup");
-popup.innerText=texto;
-popup.style.display="block";
-popup.style.opacity=1;
-setTimeout(()=>{popup.style.opacity=0;},3000);
-setTimeout(()=>{popup.style.display="none";},3500);
-}
-
-function simularFecha(){
-if(fechaActual>15)return;
-
-let goles=Math.floor(Math.random()*3);
-let golesR=Math.floor(Math.random()*3);
-
-tablaData.forEach(e=>{
-if(e.nombre===clubActual){
-e.pj++;
-e.gf+=goles;
-e.gc+=golesR;
-if(goles>golesR){e.pts+=3;moral+=5;confianza+=5;mostrarNoticia("Victoria ⚽🔥");}
-else if(goles<golesR){moral-=7;confianza-=8;mostrarNoticia("Derrota 💀");}
-else{e.pts+=1;mostrarNoticia("Empate 🤝");}
-}
-});
-
-// Simular otras noticias aleatorias
-let noticiaRandom=noticiasPool[Math.floor(Math.random()*noticiasPool.length)];
-mostrarNoticia(noticiaRandom);
-
-moral=Math.max(0,Math.min(90,moral));
-confianza=Math.max(0,Math.min(100,confianza));
-
-document.getElementById("resultado").innerText="Resultado: "+goles+" - "+golesR;
-
-fechaActual++;
-document.getElementById("fecha").innerText=fechaActual;
-
-actualizarBarras();
-actualizarTabla();
-
-if(confianza<=0){mostrar("despedido");}
-if(fechaActual>15){evaluarFinal();}
-}
-
-function actualizarTabla(){
-tablaData.sort((a,b)=>b.pts-a.pts);
-let html="<tr><th>Equipo</th><th>PJ</th><th>PTS</th></tr>";
-tablaData.forEach(e=>{
-html+=`<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.pts}</td></tr>`;
-});
-document.getElementById("tabla").innerHTML=html;
-}
-
-function evaluarFinal(){
-tablaData.sort((a,b)=>b.pts-a.pts);
-if(tablaData[0].nombre===clubActual){
-mostrar("campeon");
-document.getElementById("nombreCampeon").innerText=clubActual;
-}else{
-if(confianza<40){mostrar("despedido");}
-}
-}
-
-function resetear(){
-localStorage.removeItem("clubGuardado");
-location.reload();
-}
-
-window.onload=function(){
-let guardado=localStorage.getItem("clubGuardado");
-if(guardado){
-clubActual=guardado;
-mostrar("liga");
-document.getElementById("infoClub").innerText="Club: "+clubActual;
-actualizarBarras();
-actualizarTabla();
-document.getElementById("fecha").innerText=fechaActual;
-}
-};
-</script>
-
-</body>
-  </html>
+# --- EJEMPLO DE USO ---
+tu_equipo_primera = "La 23"
+tu_equipo_bn = "Güemes"
+simular_fecha(tu_equipo_primera, tu_equipo_bn)
+promocion()
