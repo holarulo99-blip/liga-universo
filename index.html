@@ -1,62 +1,157 @@
 <!DOCTYPE html><html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Liga Do Junior Manager - Retro Vivid Azul</title>
+<title>Liga Do Junior Manager</title>
 <style>
-body { margin:0; font-family: monospace; background:#2a6fc2; color:#fff; text-align:center; }
-button { padding:12px 24px; margin:10px; font-size:18px; cursor:pointer; border:none; border-radius:6px; background:#ffcc00; color:#000; transition:0.3s; box-shadow:0 0 5px #000;} 
-button:hover { background:#ffd633; color:#000; box-shadow:0 0 15px gold; }
-#menu, #juego, #settingsMenu { display:none; }
-#resultados, #noticias, #tabla, #promocion, #copa, #partido { background:#4a90e2; padding:15px; margin:10px auto; border-radius:10px; display:none; width:85%; text-align:left; border:3px solid #ffcc00; overflow:hidden; box-shadow:0 0 10px #000;} 
-.resultado-partido { margin:5px 0; font-size:18px; }
-.tu-partido { color:#0f0; font-weight:bold; }
-.goleada { color:#f90; font-weight:bold; font-size:20px; }
-.lider { font-weight:bold; color:#ffcc00; animation: glow 1s infinite alternate; font-size:18px; }
-.ticker { display:inline-block; white-space: nowrap; overflow: hidden; font-size:16px; }
-.ticker span { display:inline-block; padding-left:100%; animation: scroll 12s linear infinite; }
-@keyframes glow { from {text-shadow:0 0 5px #ffcc00;} to {text-shadow:0 0 20px #ffcc00;} }
-@keyframes scroll { 0%{transform:translateX(100%);} 100%{transform:translateX(-100%);} }
-h1, h2, h3 { color:#ffcc00; text-shadow:0 0 10px #000; }
+body{margin:0;font-family:monospace;background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);color:white;text-align:center}
+.hidden{display:none}
+.card{background:rgba(0,0,0,0.45);padding:20px;border-radius:15px;width:95%;max-width:900px;margin:20px auto;box-shadow:0 0 25px rgba(0,0,0,0.7)}
+button{padding:10px 20px;margin:8px;font-size:16px;cursor:pointer;border:none;border-radius:8px;background:#f7b733;color:#000;font-weight:bold;transition:0.3s}
+button:hover{transform:scale(1.08);background:#ffd76a}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:6px;border-bottom:1px solid rgba(255,255,255,0.2)}
+.gold{color:gold;font-weight:bold}
+.red{color:#ff6b6b}
+.green{color:#6bff95}
 </style>
 </head>
-<body>
-<div id="menu">
-<h1 style="animation: glow 2s infinite alternate;">⚽ Liga Do Junior Manager</h1>
-<button onclick="startJuego()">▶ Play</button>
+<body><div id="menu" class="card">
+<h1>⚽ Liga Do Junior Manager</h1>
+<button onclick="startGame()">▶ Nueva Temporada</button>
 <button onclick="openSettings()">⚙ Settings</button>
-<button onclick="toggleIdioma()">🌐 Idioma</button>
-</div><div id="settingsMenu">
-<h2>⚙ Settings</h2>
-<label>Velocidad simulación: <input type="range" id="velocidad" min="1" max="5" value="3"></label><br>
-<label>Mostrar Pop-ups: <input type="checkbox" id="popups" checked></label><br>
-<button onclick="closeSettings()">⬅ Volver</button>
-</div><div id="juego">
-<h2>Liga Do Junior Manager - Retro Vivid Azul</h2>
-<label>Tu equipo Primera: <input id="tuPrimera" value="La 23"></label>
-<label>Tu equipo B Nacional: <input id="tuBN" value="Güemes"></label><br>
-<button onclick="simularFecha()">Simular Fecha</button>
-<button onclick="jugarPartido()">🎮 Jugar Tu Partido</button>
-<div id="partido"></div>
-<div id="resultados"></div>
-<div id="copa"></div>
-<div id="noticias"></div>
-<div id="tabla"></div>
-<div id="promocion"></div>
-</div><script>
-let idioma = 'es';
-function toggleIdioma(){ idioma = idioma==='es'?'en':'es'; alert('Idioma: '+(idioma==='es'?'Español':'English')); }
-function openSettings(){ document.getElementById('settingsMenu').style.display='block'; document.getElementById('menu').style.display='none'; }
-function closeSettings(){ document.getElementById('settingsMenu').style.display='none'; document.getElementById('menu').style.display='block'; }
-function startJuego(){ document.getElementById('menu').style.display='none'; document.getElementById('juego').style.display='block'; }
+</div><div id="settings" class="card hidden">
+<h2>Configuración</h2>
+<label>Velocidad:</label>
+<select id="speed">
+<option value="800">Normal</option>
+<option value="400">Rápida</option>
+<option value="150">Ultra</option>
+</select>
+<br>
+<button onclick="closeSettings()">Volver</button>
+</div><div id="game" class="hidden">
+<div class="card">
+<h2>📅 Fecha <span id="round">1</span></h2>
+<div id="fixtures"></div>
+<button onclick="simulateRound()">Simular Fecha</button>
+</div><div class="card">
+<h2>🏆 Tabla Primera</h2>
+<table><thead><tr><th>Equipo</th><th>Pts</th></tr></thead><tbody id="table1"></tbody></table>
+</div><div class="card">
+<h2>⬇ Descenso / Promoción</h2>
+<div id="relegation"></div>
+</div><div class="card">
+<h2>🏆 B Nacional</h2>
+<table><thead><tr><th>Equipo</th><th>Pts</th></tr></thead><tbody id="table2"></tbody></table>
+</div><div class="card">
+<h2>📰 Noticias</h2>
+<div id="news"></div>
+</div><button onclick="goMenu()">Salir</button>
 
-const primera = ["La 23","Los Tigres","Sporting","La Riveira","Sol de América","Deportivo América","Garrablanca","El Plan","River Plate","Independiente","Boca Juniors","Racing","San Lorenzo","Huracán","Vélez","Lanús"];
-const bnacional = ["Güemes","Capital","Persa FC","La Arboledad","Carrefourt","Unión Infantil","Unión Hurlingham","Celestial","La Base","El Gol","Sevilla","San Ciro","El Fortín","San José","Deportivo Motores","Deportivo Morón"];
-let moralPrimera = {}, moralBN = {}, tablaPrimera = {}, tablaBN = {};
-function initTablas(){ primera.forEach(e=>{moralPrimera[e]=50; tablaPrimera[e]={p:0,gf:0,gc:0,dif:0};}); bnacional.forEach(e=>{moralBN[e]=50; tablaBN[e]={p:0,gf:0,gc:0,dif:0};}); }
-function generarPartidos(equipos, tuEquipo){ let copia=[...equipos], partidos=[]; while(copia.length>0){ let e1=copia.shift(); if(e1===tuEquipo){ let e2=copia[Math.floor(Math.random()*copia.length)]; copia.splice(copia.indexOf(e2),1); partidos.push({e1,e2,tu:true}); } else{ if(copia.length===0) break; let e2=copia.shift(); partidos.push({e1,e2,tu:false}); } } return partidos; }
-function simularPartido(e1,e2,tu,moral,tabla){ let mod1=Math.floor(Math.random()*6)+Math.floor(moral[e1]/20); let mod2=Math.floor(Math.random()*6)+Math.floor(moral[e2]/20); tabla[e1].gf+=mod1; tabla[e1].gc+=mod2; tabla[e2].gf+=mod2; tabla[e2].gc+=mod1; tabla[e1].dif=tabla[e1].gf-tabla[e1].gc; tabla[e2].dif=tabla[e2].gf-tabla[e2].gc; if(mod1>mod2){tabla[e1].p+=3; moral[e1]+=1; moral[e2]-=1;} else if(mod2>mod1){tabla[e2].p+=3; moral[e2]+=1; moral[e1]-=1;} else {tabla[e1].p+=1; tabla[e2].p+=1;} return {mod1,mod2}; }
-function simularFecha(){ initTablas(); let tuPrimera=document.getElementById('tuPrimera').value; let tuBN=document.getElementById('tuBN').value; let resHTML='<h2>📅 Resultados - Primera División</h2>'; let noticiasHTML='<h3>📰 Noticias importantes</h3>'; let copaHTML='<h3>🏆 Copa Argentina</h3>'; let partidosPrimera=generarPartidos(primera, tuPrimera); partidosPrimera.forEach(p=>{ let r=simularPartido(p.e1,p.e2,p.tu,moralPrimera,tablaPrimera); let clase=p.tu?'tu-partido':'', goleada=Math.abs(r.mod1-r.mod2)>=3?'goleada':''; resHTML+=`<div class='resultado-partido ${clase} ${goleada}'>${p.e1} ${r.mod1}-${r.mod2} ${p.e2}</div>`; if(p.tu) noticiasHTML+=`<span>⚽ Tu partido: ${p.e1} ${r.mod1}-${r.mod2} ${p.e2} • </span>`; if(goleada) noticiasHTML+=`<span>🔥 Goleada: ${p.e1} ${r.mod1}-${r.mod2} ${p.e2} • </span>`; }); let partidosBN=generarPartidos(bnacional, tuBN); partidosBN.forEach(p=>{ let r=simularPartido(p.e1,p.e2,p.tu,moralBN,tablaBN); let clase=p.tu?'tu-partido':'', goleada=Math.abs(r.mod1-r.mod2)>=3?'goleada':''; resHTML+=`<div class='resultado-partido ${clase} ${goleada}'>${p.e1} ${r.mod1}-${r.mod2} ${p.e2}</div>`; if(p.tu) noticiasHTML+=`<span>⚽ Tu partido: ${p.e1} ${r.mod1}-${r.mod2} ${p.e2} • </span>`; if(goleada) noticiasHTML+=`<span>🔥 Goleada: ${p.e1} ${r.mod1}-${r.mod2} ${p.e2} • </span>`; }); let equiposCopa=[primera[Math.floor(Math.random()*primera.length)], bnacional[Math.floor(Math.random()*bnacional.length)]]; let rCopa={mod1:Math.floor(Math.random()*6), mod2:Math.floor(Math.random()*6)}; copaHTML+=`<div>${equiposCopa[0]} ${rCopa.mod1}-${rCopa.mod2} ${equiposCopa[1]}</div>`; if(rCopa.mod1>rCopa.mod2) copaHTML+=`<div class='lider'>🏆 Campeón Copa Argentina: ${equiposCopa[0]}</div>`; else if(rCopa.mod2>rCopa.mod1) copaHTML+=`<div class='lider'>🏆 Campeón Copa Argentina: ${equiposCopa[1]}</div>`; document.getElementById('resultados').innerHTML=resHTML; document.getElementById('resultados').style.display='block'; document.getElementById('copa').innerHTML=copaHTML; document.getElementById('copa').style.display='block'; document.getElementById('noticias').innerHTML=`<div class='ticker'><span>${noticiasHTML}</span></div>`; document.getElementById('noticias').style.display='block'; }
-function jugarPartido(){ let tuEquipo=document.getElementById('tuPrimera').value; let rival=primera.filter(e=>e!==tuEquipo)[Math.floor(Math.random()*15)]; let html=`<h3>🎮 Partido Retro: ${tuEquipo} vs ${rival}</h3>`; html+=`<button onclick='accionPartido("gol")'>⚡ Tiro</button><button onclick='accionPartido("defensa")'>🛡 Defensa</button><button onclick='accionPartido("pase")'>🎯 Pase</button>`; html+=`<div id='resultadoPartido'></div>`; document.getElementById('partido').innerHTML=html; document.getElementById('partido').style.display='block'; }
-function accionPartido(tipo){ let resultado=document.getElementById('resultadoPartido'); let chance=Math.floor(Math.random()*3); if(tipo==='gol' && chance>0) resultado.innerHTML='⚡ ¡Gol! 🎉'; else if(tipo==='defensa' && chance>1) resultado.innerHTML='🛡 ¡Atajada!'; else if(tipo==='pase' && chance>0) resultado.innerHTML='🎯 Buen pase ✔'; else resultado.innerHTML='Nada sucede...'; }
+</div><script>
+let speed=800;
+let round=1;
+let userTeam="La 23";
+
+let primera=["La 23","Los Tigres","Sporting","La Rivera","El Plan","Sol de América"];
+let bNacional=["Güemes","Capital","Persa FC","La Arboledad","Unión Hurlingham","San José"];
+
+let tabla1=[];
+let tabla2=[];
+
+function resetSeason(){
+tabla1=primera.map(t=>({name:t,pts:0}));
+tabla2=bNacional.map(t=>({name:t,pts:0}));
+round=1;
+}
+
+function renderTables(){
+tabla1.sort((a,b)=>b.pts-a.pts);
+tabla2.sort((a,b)=>b.pts-a.pts);
+
+document.getElementById("table1").innerHTML=tabla1.map((t,i)=>
+`<tr><td class="${i==0?"gold":""} ${i>=tabla1.length-2?"red":""}">${t.name}</td><td>${t.pts}</td></tr>`).join("");
+
+document.getElementById("table2").innerHTML=tabla2.map((t,i)=>
+`<tr><td class="${i==0?"green":""}">${t.name}</td><td>${t.pts}</td></tr>`).join("");
+
+updateRelegation();
+}
+
+function updateRelegation(){
+let descenso=tabla1.slice(-2).map(t=>t.name);
+let promoPrimera=tabla1[tabla1.length-3].name;
+let promoBN=tabla2[2]?tabla2[2].name:"-";
+
+document.getElementById("relegation").innerHTML=
+`Descensos directos: ${descenso.join(", ")}<br>
+Promoción: ${promoPrimera} vs ${promoBN}`;
+}
+
+function generateFixtures(teams){
+let shuffled=[...teams].sort(()=>Math.random()-0.5);
+let matches=[];
+for(let i=0;i<shuffled.length;i+=2){
+matches.push([shuffled[i],shuffled[i+1]]);
+}
+return matches;
+}
+
+function simulateLeague(tabla){
+let matches=generateFixtures(tabla.map(t=>t.name));
+let results="";
+
+matches.forEach(m=>{
+let g1=Math.floor(Math.random()*4);
+let g2=Math.floor(Math.random()*4);
+let t1=tabla.find(t=>t.name===m[0]);
+let t2=tabla.find(t=>t.name===m[1]);
+
+if(g1>g2)t1.pts+=3;
+else if(g2>g1)t2.pts+=3;
+else{t1.pts++;t2.pts++;}
+
+results+=`⚽ ${m[0]} ${g1}-${g2} ${m[1]}<br>`;
+});
+return results;
+}
+
+function simulateRound(){
+document.getElementById("round").innerText=round;
+
+let res1=simulateLeague(tabla1);
+let res2=simulateLeague(tabla2);
+
+let important="";
+if(res1.includes(userTeam)) important="🔥 Partido de "+userTeam+" destacado";
+
+document.getElementById("news").innerHTML=important+"<br><br>"+res1+"<br>--- B Nacional ---<br>"+res2;
+
+round++;
+renderTables();
+}
+
+function startGame(){
+resetSeason();
+document.getElementById("menu").classList.add("hidden");
+document.getElementById("game").classList.remove("hidden");
+renderTables();
+}
+
+function goMenu(){
+document.getElementById("game").classList.add("hidden");
+document.getElementById("menu").classList.remove("hidden");
+}
+
+function openSettings(){
+document.getElementById("menu").classList.add("hidden");
+document.getElementById("settings").classList.remove("hidden");
+}
+
+function closeSettings(){
+speed=parseInt(document.getElementById("speed").value);
+document.getElementById("settings").classList.add("hidden");
+document.getElementById("menu").classList.remove("hidden");
+}
 </script></body>
 </html>
