@@ -1,10 +1,10 @@
 <!DOCTYPE html><html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Liga Do Junior Manager - Retro Demo</title>
+<title>Liga Do Junior Manager - Retro Serio</title>
 <style>
 body { margin:0; font-family: monospace; background:#0a1f3d; color:#fff; text-align:center; }
-button { padding:12px 24px; margin:10px; font-size:18px; cursor:pointer; border:none; border-radius:6px; background:#3a5f9e; color:#fff; transition: 0.3s; }
+button { padding:12px 24px; margin:10px; font-size:18px; cursor:pointer; border:none; border-radius:6px; background:#3a5f9e; color:#fff; transition:0.3s; }
 button:hover { background:#3a5f9e; color:gold; }
 #menu, #juego { display:none; }
 #resultados, #noticias, #tabla, #promocion, #copa { background:#1e3a6f; padding:10px; margin:10px auto; border-radius:8px; display:none; width:80%; text-align:left; border:2px solid #3a5f9e; overflow:hidden; }
@@ -26,7 +26,7 @@ h1, h2, h3 { color:gold; }
 <button onclick="alert('Settings en desarrollo')">⚙ Settings</button>
 <button onclick="alert('Idioma en desarrollo')">🌐 Idioma</button>
 </div><div id="juego">
-<h2>Liga Do Junior Manager - Demo Retro</h2>
+<h2>Liga Do Junior Manager - Retro Serio</h2>
 <label>Tu equipo Primera: <input id="tuPrimera" value="La 23"></label>
 <label>Tu equipo B Nacional: <input id="tuBN" value="Güemes"></label><br>
 <button onclick="simularFecha()">Simular Fecha</button>
@@ -44,8 +44,10 @@ function startJuego(){
   document.getElementById('juego').style.display='block';
 }
 
-const primera = ["La 23","Los Verdes","Sol de América","La Riveira","El Plan","Sporting","NTV","Matadores","Garrablanca","La Riveira2","Los Tigres","Deportivo América","River B","River C","Equipo15","Equipo16"];
+// Equipos reales y coherentes
+const primera = ["La 23","Los Tigres","Sporting","La Riveira","Sol de América","Deportivo América","Garrablanca","El Plan","River Plate","Independiente","Boca Juniors","Racing","San Lorenzo","Huracán","Vélez","Lanús"];
 const bnacional = ["Güemes","Capital","Persa FC","La Arboledad","Carrefourt","Unión Infantil","Unión Hurlingham","Celestial","La Base","El Gol","Sevilla","San Ciro","El Fortín","San José","Deportivo Motores","Deportivo Morón"];
+
 let moralPrimera = {}, moralBN = {}, tablaPrimera = {}, tablaBN = {};
 
 function initTablas() {
