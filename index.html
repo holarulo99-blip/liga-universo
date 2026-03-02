@@ -3,21 +3,25 @@
 <meta charset="UTF-8">
 <title>Liga Do Junior Manager - Retro Demo</title>
 <style>
-body { margin:0; font-family: monospace; background:#111; color:#eee; text-align:center; }
-button { padding:12px 24px; margin:10px; font-size:18px; cursor:pointer; border:none; border-radius:6px; background:#222; color:#eee; transition: 0.3s; }
-button:hover { background:#555; color:gold; }
+body { margin:0; font-family: monospace; background:#0a1f3d; color:#fff; text-align:center; }
+button { padding:12px 24px; margin:10px; font-size:18px; cursor:pointer; border:none; border-radius:6px; background:#3a5f9e; color:#fff; transition: 0.3s; }
+button:hover { background:#3a5f9e; color:gold; }
 #menu, #juego { display:none; }
-#resultados, #noticias, #tabla, #promocion { background:#222; padding:10px; margin:10px auto; border-radius:8px; display:none; width:80%; text-align:left; }
+#resultados, #noticias, #tabla, #promocion, #copa { background:#1e3a6f; padding:10px; margin:10px auto; border-radius:8px; display:none; width:80%; text-align:left; border:2px solid #3a5f9e; overflow:hidden; }
 .resultado-partido { margin:5px 0; }
 .tu-partido { color:#0f0; font-weight:bold; }
 .goleada { color:#f90; font-weight:bold; }
 .lider { font-weight:bold; color:gold; animation: glow 1s infinite alternate; }
+.ticker { display:inline-block; white-space: nowrap; overflow: hidden; }
+.ticker span { display:inline-block; padding-left:100%; animation: scroll 10s linear infinite; }
 @keyframes glow { from {text-shadow:0 0 5px gold;} to {text-shadow:0 0 15px gold;} }
+@keyframes scroll { 0%{transform:translateX(100%);} 100%{transform:translateX(-100%);} }
+h1, h2, h3 { color:gold; }
 </style>
 </head>
 <body>
 <div id="menu">
-<h1 style="color:gold; animation: glow 2s infinite alternate;">Liga Do Junior Manager</h1>
+<h1 style="animation: glow 2s infinite alternate;">Liga Do Junior Manager</h1>
 <button onclick="startJuego()">▶ Play</button>
 <button onclick="alert('Settings en desarrollo')">⚙ Settings</button>
 <button onclick="alert('Idioma en desarrollo')">🌐 Idioma</button>
@@ -27,6 +31,7 @@ button:hover { background:#555; color:gold; }
 <label>Tu equipo B Nacional: <input id="tuBN" value="Güemes"></label><br>
 <button onclick="simularFecha()">Simular Fecha</button>
 <div id="resultados"></div>
+<div id="copa"></div>
 <div id="noticias"></div>
 <div id="tabla"></div>
 <div id="promocion"></div>
@@ -86,28 +91,39 @@ function simularFecha(){
   
   let resHTML = '<h2>📅 Resultados de la jornada - Primera División</h2>';
   let noticiasHTML = '<h3>📰 Noticias importantes</h3>';
+  let copaHTML = '<h3>🏆 Copa Argentina</h3>';
+
   let partidosPrimera = generarPartidos(primera, tuPrimera);
   partidosPrimera.forEach(p=>{
     let r = simularPartido(p.e1,p.e2,p.tu,moralPrimera,tablaPrimera);
     let clase = p.tu?'tu-partido':'', goleada = Math.abs(r.mod1-r.mod2)>=3?'goleada':'';
     resHTML += `<div class='resultado-partido ${clase} ${goleada}'>${p.e1} ${r.mod1}-${r.mod2} ${p.e2}</div>`;
-    if(p.tu) noticiasHTML += `<div>⚽ Tu partido: ${p.e1} ${r.mod1}-${r.mod2} ${p.e2}</div>`;
-    if(goleada) noticiasHTML += `<div>🔥 Goleada: ${p.e1} ${r.mod1}-${r.mod2} ${p.e2}</div>`;
+    if(p.tu) noticiasHTML += `<span>⚽ Tu partido: ${p.e1} ${r.mod1}-${r.mod2} ${p.e2} • </span>`;
+    if(goleada) noticiasHTML += `<span>🔥 Goleada: ${p.e1} ${r.mod1}-${r.mod2} ${p.e2} • </span>`;
   });
-  
-  resHTML += '<h2>📅 Resultados de la jornada - B Nacional</h2>';
+
   let partidosBN = generarPartidos(bnacional, tuBN);
   partidosBN.forEach(p=>{
     let r = simularPartido(p.e1,p.e2,p.tu,moralBN,tablaBN);
     let clase = p.tu?'tu-partido':'', goleada = Math.abs(r.mod1-r.mod2)>=3?'goleada':'';
     resHTML += `<div class='resultado-partido ${clase} ${goleada}'>${p.e1} ${r.mod1}-${r.mod2} ${p.e2}</div>`;
-    if(p.tu) noticiasHTML += `<div>⚽ Tu partido: ${p.e1} ${r.mod1}-${r.mod2} ${p.e2}</div>`;
-    if(goleada) noticiasHTML += `<div>🔥 Goleada: ${p.e1} ${r.mod1}-${r.mod2} ${p.e2}</div>`;
+    if(p.tu) noticiasHTML += `<span>⚽ Tu partido: ${p.e1} ${r.mod1}-${r.mod2} ${p.e2} • </span>`;
+    if(goleada) noticiasHTML += `<span>🔥 Goleada: ${p.e1} ${r.mod1}-${r.mod2} ${p.e2} • </span>`;
   });
-  
+
+  // Copa Argentina simulada
+  let equiposCopa = [primera[Math.floor(Math.random()*primera.length)], bnacional[Math.floor(Math.random()*bnacional.length)]];
+  let rCopa = {mod1:Math.floor(Math.random()*6), mod2:Math.floor(Math.random()*6)};
+  copaHTML += `<div>${equiposCopa[0]} ${rCopa.mod1}-${rCopa.mod2} ${equiposCopa[1]}</div>`;
+  if(rCopa.mod1>rCopa.mod2) copaHTML += `<div class='lider'>🏆 Campeón Copa Argentina: ${equiposCopa[0]}</div>`;
+  else if(rCopa.mod2>rCopa.mod1) copaHTML += `<div class='lider'>🏆 Campeón Copa Argentina: ${equiposCopa[1]}</div>`;
+
   document.getElementById('resultados').innerHTML=resHTML; document.getElementById('resultados').style.display='block';
-  document.getElementById('noticias').innerHTML=noticiasHTML; document.getElementById('noticias').style.display='block';
+  document.getElementById('copa').innerHTML=copaHTML; document.getElementById('copa').style.display='block';
   
+  // Noticias ticker
+  document.getElementById('noticias').innerHTML=`<div class='ticker'><span>${noticiasHTML}</span></div>`; document.getElementById('noticias').style.display='block';
+
   // Tabla simple
   let tablaHTML='<h3>📊 Tabla Primera División</h3>';
   Object.entries(tablaPrimera).sort((a,b)=>b[1].p-a[1].p).forEach(([eq,d])=>{
